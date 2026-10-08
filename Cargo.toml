@@ -1,0 +1,20 @@
+[package]
+name = "mistrip"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Native Linux control for the Xiaomi Smart Lightstrip Pro over miIO"
+repository = "https://github.com/Legion112/mistrip"
+readme = "README.md"
+keywords = ["xiaomi", "miio", "lightstrip", "miot", "smarthome"]
+
+[dependencies]
+aes = "0.9.3"
+anyhow = "1.0.104"
+cbc = { version = "0.2.1", features = ["alloc"] }
+dirs = "7.0.0"
+eframe = "0.35.0"
+egui = "0.35.0"
+md-5 = "0.11.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
