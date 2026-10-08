@@ -59,8 +59,8 @@ pub fn load(path: &Path) -> Result<Vec<DeviceEntry>> {
             path.display()
         )
     })?;
-    let servers: Vec<Server> =
-        serde_json::from_str(&text).with_context(|| format!("{} is not valid JSON", path.display()))?;
+    let servers: Vec<Server> = serde_json::from_str(&text)
+        .with_context(|| format!("{} is not valid JSON", path.display()))?;
 
     let mut out = Vec::new();
     for server in servers {

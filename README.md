@@ -49,17 +49,36 @@ email-code flow and its 3–5/day rate limit entirely.
 ## Usage
 
 ```sh
-cargo build --release
-
 mistrip status                      # current state
-mistrip on | off
+mistrip on | off | toggle
 mistrip brightness 60               # percent, 1-100
 mistrip color FF0000                # whole strip
 mistrip mode 3                      # built-in scene, 0-8
 mistrip rhythm on                   # music sync (control box microphone)
+mistrip sensitivity 2               # music sync sensitivity, 0-2
+mistrip timer 1800                  # sleep timer in seconds, 0 disables
 mistrip segments 0:FF0000 1:00FF00  # individual 10 cm segments
 mistrip devices                     # everything in the credentials file
 ```
+
+## Make targets
+
+`make` on its own lists everything. The useful ones:
+
+```sh
+make build release install clean    # cargo wrappers
+make test fmt clippy check          # check = fmt-check + clippy + test
+make token                          # fetch the token into the config file
+make config-check                   # verify the file exists and is mode 0600
+make status devices probe           # read the device
+make color COLOR=00FF00             # ad-hoc control
+make brightness LEVEL=40
+make mode MODE=5
+make segments SEGMENTS="0:FF0000 1:0000FF"
+```
+
+Override `CARGO`, `PYTHON` or `EXTRACTOR` as needed, e.g.
+`make token EXTRACTOR=/path/to/token_extractor.py`.
 
 ## Scene modes
 

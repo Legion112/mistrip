@@ -15,6 +15,7 @@ const PIID_ON: u8 = 1;
 const PIID_MODE: u8 = 2;
 const PIID_BRIGHTNESS: u8 = 3;
 const PIID_COLOR: u8 = 4;
+const AIID_TOGGLE: u8 = 1;
 
 // Extra attributes service (siid 3)
 const PIID_RHYTHM_ON: u8 = 3;
@@ -79,7 +80,11 @@ pub fn pack_rgb(r: u8, g: u8, b: u8) -> u32 {
 }
 
 pub fn unpack_rgb(color: u32) -> (u8, u8, u8) {
-    (((color >> 16) & 0xFF) as u8, ((color >> 8) & 0xFF) as u8, (color & 0xFF) as u8)
+    (
+        ((color >> 16) & 0xFF) as u8,
+        ((color >> 8) & 0xFF) as u8,
+        (color & 0xFF) as u8,
+    )
 }
 
 /// A lightstrip we can talk to.
@@ -153,7 +158,9 @@ impl Strip {
             match (siid, piid) {
                 (SIID_LIGHT, PIID_ON) => status.on = value.as_bool().unwrap_or(false),
                 (SIID_LIGHT, PIID_MODE) => status.mode = value.as_u64().unwrap_or(0) as u8,
-                (SIID_LIGHT, PIID_BRIGHTNESS) => status.brightness = value.as_u64().unwrap_or(0) as u8,
+                (SIID_LIGHT, PIID_BRIGHTNESS) => {
+                    status.brightness = value.as_u64().unwrap_or(0) as u8
+                }
                 (SIID_LIGHT, PIID_COLOR) => status.color = value.as_u64().unwrap_or(0) as u32,
                 (SIID_EXTRA, PIID_RHYTHM_ON) => status.rhythm_on = value.as_bool().unwrap_or(false),
                 (SIID_EXTRA, PIID_RHYTHM_SENSITIVITY) => {
@@ -165,9 +172,13 @@ impl Strip {
                 (SIID_EXTRA, PIID_RHYTHM_COLOR) => {
                     status.rhythm_color = value.as_str().unwrap_or_default().to_string()
                 }
-                (SIID_EXTRA, PIID_SLEEP_TIMER) => status.sleep_timer = value.as_u64().unwrap_or(0) as u32,
+                (SIID_EXTRA, PIID_SLEEP_TIMER) => {
+                    status.sleep_timer = value.as_u64().unwrap_or(0) as u32
+                }
                 (SIID_EXTRA, PIID_DIY_ID) => status.diy_id = value.as_u64().unwrap_or(0) as u8,
-                (SIID_EXTRA, PIID_DIY_FREE_ID) => status.diy_free_id = value.as_u64().unwrap_or(0) as u8,
+                (SIID_EXTRA, PIID_DIY_FREE_ID) => {
+                    status.diy_free_id = value.as_u64().unwrap_or(0) as u8
+                }
                 (SIID_EXTRA, PIID_LENGTH) => status.length_m = value.as_u64().unwrap_or(2) as u8,
                 _ => {}
             }
@@ -176,6 +187,13 @@ impl Strip {
             status.length_m = 2;
         }
         Ok(status)
+    }
+
+    /// Flip the power state using the device's own toggle action (siid 2, aiid 1),
+    /// which avoids a read-then-write race against the Mi Home app.
+    pub fn toggle(&mut self) -> Result<()> {
+        self.call_action(SIID_LIGHT, AIID_TOGGLE, json!([]))?;
+        Ok(())
     }
 
     pub fn set_on(&mut self, on: bool) -> Result<()> {
@@ -262,17 +280,29 @@ mod tests {
 
     #[test]
     fn status_derives_segment_count_from_length() {
-        let status = Status { length_m: 2, ..Default::default() };
+        let status = Status {
+            length_m: 2,
+            ..Default::default()
+        };
         assert_eq!(status.segments(), 20);
-        let extended = Status { length_m: 5, ..Default::default() };
+        let extended = Status {
+            length_m: 5,
+            ..Default::default()
+        };
         assert_eq!(extended.segments(), 50);
     }
 
     #[test]
     fn mode_names_cover_the_spec_range() {
-        let status = Status { mode: 3, ..Default::default() };
+        let status = Status {
+            mode: 3,
+            ..Default::default()
+        };
         assert_eq!(status.mode_name(), "Nordic aurora");
-        let bogus = Status { mode: 99, ..Default::default() };
+        let bogus = Status {
+            mode: 99,
+            ..Default::default()
+        };
         assert_eq!(bogus.mode_name(), "unknown");
     }
 }

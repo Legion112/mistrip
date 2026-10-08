@@ -43,7 +43,11 @@ impl Token {
     pub fn from_hex(hex: &str) -> Result<Self> {
         let hex = hex.trim();
         if hex.len() != TOKEN_LEN * 2 {
-            bail!("token must be {} hex chars, got {}", TOKEN_LEN * 2, hex.len());
+            bail!(
+                "token must be {} hex chars, got {}",
+                TOKEN_LEN * 2,
+                hex.len()
+            );
         }
         let mut raw = [0u8; TOKEN_LEN];
         for (i, byte) in raw.iter_mut().enumerate() {
@@ -78,7 +82,11 @@ impl Token {
 impl std::fmt::Debug for Token {
     /// Never print a token in full: it is the device's only secret.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Token({:02x}{:02x}..{:02x}{:02x})", self.0[0], self.0[1], self.0[14], self.0[15])
+        write!(
+            f,
+            "Token({:02x}{:02x}..{:02x}{:02x})",
+            self.0[0], self.0[1], self.0[14], self.0[15]
+        )
     }
 }
 
@@ -98,7 +106,11 @@ fn build_packet(device_id: u32, stamp: u32, token: &Token, payload: &[u8]) -> Ve
     pkt.extend_from_slice(&stamp.to_be_bytes());
     pkt.extend_from_slice(&token.0); // checksum field holds the token while hashing
 
-    let encrypted = if payload.is_empty() { Vec::new() } else { token.encrypt(payload) };
+    let encrypted = if payload.is_empty() {
+        Vec::new()
+    } else {
+        token.encrypt(payload)
+    };
     pkt.extend_from_slice(&encrypted);
 
     let total = pkt.len() as u16;
@@ -112,7 +124,10 @@ fn build_packet(device_id: u32, stamp: u32, token: &Token, payload: &[u8]) -> Ve
 
 fn parse_header(buf: &[u8]) -> Result<(u16, u32, u32)> {
     if buf.len() < HEADER_LEN {
-        bail!("short packet: {} bytes, need at least {HEADER_LEN}", buf.len());
+        bail!(
+            "short packet: {} bytes, need at least {HEADER_LEN}",
+            buf.len()
+        );
     }
     let magic = u16::from_be_bytes([buf[0], buf[1]]);
     if magic != MAGIC {

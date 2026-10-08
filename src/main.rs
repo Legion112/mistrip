@@ -26,6 +26,9 @@ COMMANDS:
     color <RRGGBB>         set a single colour for the whole strip
     mode <0-8>             select a built-in scene
     rhythm <on|off>        music sync via the control box microphone
+    sensitivity <0-2>      music sync sensitivity
+    timer <seconds>        sleep timer, 0-21600 (0 disables)
+    toggle                 flip the power state via the device's own action
     segments <N:RRGGBB>... paint individual 10 cm segments
     devices                list every device in the credentials file
 
@@ -45,8 +48,14 @@ fn connect() -> Result<Strip> {
     let path = config::default_path()?;
     let entry = config::find_strip(&path)?;
     let token = Token::from_hex(&entry.token_hex)?;
-    println!("{} at {} (did {})", entry.name, entry.ip, entry.did);
     let conn = Connection::connect(&entry.ip, token, TIMEOUT)?;
+    println!(
+        "{} at {} (did {}, handshake id {})",
+        entry.name,
+        entry.ip,
+        entry.did,
+        conn.device_id()
+    );
     Ok(Strip::new(conn, entry.did))
 }
 
@@ -57,7 +66,11 @@ fn print_status(strip: &mut Strip) -> Result<()> {
     println!("  brightness  : {}%", status.brightness);
     println!("  colour      : #{r:02X}{g:02X}{b:02X}");
     println!("  mode        : {} ({})", status.mode, status.mode_name());
-    println!("  length      : {} m -> {} segments", status.length_m, status.segments());
+    println!(
+        "  length      : {} m -> {} segments",
+        status.length_m,
+        status.segments()
+    );
     println!(
         "  music sync  : {} (sensitivity {}, animation {}, colours {:?})",
         if status.rhythm_on { "on" } else { "off" },
@@ -66,7 +79,10 @@ fn print_status(strip: &mut Strip) -> Result<()> {
         status.rhythm_color
     );
     println!("  sleep timer : {} s", status.sleep_timer);
-    println!("  diy slot    : {} (next free {})", status.diy_id, status.diy_free_id);
+    println!(
+        "  diy slot    : {} (next free {})",
+        status.diy_id, status.diy_free_id
+    );
     Ok(())
 }
 
@@ -96,7 +112,10 @@ fn main() -> Result<()> {
         "on" => strip.set_on(true)?,
         "off" => strip.set_on(false)?,
         "brightness" => {
-            let value: u8 = args.get(1).context("brightness needs a value, 1-100")?.parse()?;
+            let value: u8 = args
+                .get(1)
+                .context("brightness needs a value, 1-100")?
+                .parse()?;
             strip.set_brightness(value)?;
         }
         "color" | "colour" => {
@@ -113,6 +132,25 @@ fn main() -> Result<()> {
             Some("off") => strip.set_rhythm(false)?,
             _ => bail!("rhythm needs 'on' or 'off'"),
         },
+        "sensitivity" => {
+            let level: u8 = args.get(1).context("sensitivity needs 0-2")?.parse()?;
+            strip.set_rhythm_sensitivity(level)?;
+        }
+        "timer" => {
+            let seconds: u32 = args
+                .get(1)
+                .context("timer needs seconds, 0-21600")?
+                .parse()?;
+            strip.set_sleep_timer(seconds)?;
+            if seconds == 0 {
+                println!("  sleep timer disabled");
+            } else {
+                println!("  strip turns off in {seconds} s");
+            }
+        }
+        "toggle" => {
+            strip.toggle()?;
+        }
         "segments" => {
             let mut segments = Vec::new();
             for spec in &args[1..] {
