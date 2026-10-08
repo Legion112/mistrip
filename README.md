@@ -7,10 +7,12 @@ Xiaomi ships no Linux software for this device, and its lighting is reachable on
 over the network — the control box is mains-powered and has no USB data interface.
 `mistrip` speaks the miIO protocol directly to the device on your LAN.
 
+![mistrip](assets/screenshot.png)
+
 ## Status
 
-Working: protocol layer, device discovery from credentials, full property read,
-and a CLI. The egui desktop GUI is in progress.
+Working: protocol layer, CLI, and a native GUI. Two binaries are built —
+`mistrip` (CLI) and `mistrip-gui` (desktop app), sharing the library in `src/`.
 
 ## How it works
 
@@ -60,6 +62,18 @@ mistrip timer 1800                  # sleep timer in seconds, 0 disables
 mistrip segments 0:FF0000 1:00FF00  # individual 10 cm segments
 mistrip devices                     # everything in the credentials file
 ```
+
+## Desktop install
+
+```sh
+make install          # both binaries into ~/.cargo/bin
+make install-desktop  # icon + menu entry, so the GUI appears in your launcher
+```
+
+`make uninstall-desktop` removes the entry and icons again. The GUI does all
+device I/O on a worker thread, so an unreachable strip never freezes the
+window; it reconnects on its own and polls every 3 s, which means changes made
+from the Mi Home app or the physical button show up too.
 
 ## Make targets
 

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=mistrip
+GenericName=Lightstrip Control
+Comment=Control the Xiaomi Smart Lightstrip Pro over the local network
+Exec=@BINDIR@/mistrip-gui
+Icon=mistrip
+Terminal=false
+Categories=Utility;
+Keywords=light;lightstrip;rgb;led;xiaomi;miio;smarthome;
+StartupNotify=true
+StartupWMClass=mistrip

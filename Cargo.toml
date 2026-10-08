@@ -8,6 +8,18 @@ repository = "https://github.com/Legion112/mistrip"
 readme = "README.md"
 keywords = ["xiaomi", "miio", "lightstrip", "miot", "smarthome"]
 
+[lib]
+name = "mistrip"
+path = "src/lib.rs"
+
+[[bin]]
+name = "mistrip"
+path = "src/bin/mistrip.rs"
+
+[[bin]]
+name = "mistrip-gui"
+path = "src/bin/mistrip-gui.rs"
+
 [dependencies]
 aes = "0.9.3"
 anyhow = "1.0.104"

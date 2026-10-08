@@ -1,15 +1,11 @@
 //! mistrip — native Linux control for the Xiaomi Smart Lightstrip Pro.
 
-mod config;
-mod miio;
-mod strip;
-
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
-
-use crate::miio::{Connection, Token};
-use crate::strip::{MODES, Strip, unpack_rgb};
+use mistrip::config;
+use mistrip::miio::{Connection, Token};
+use mistrip::strip::{MODES, Strip, unpack_rgb};
 
 const TIMEOUT: Duration = Duration::from_secs(5);
 

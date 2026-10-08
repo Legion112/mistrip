@@ -37,12 +37,49 @@ release: ## Optimised build
 	$(CARGO) build --release
 
 .PHONY: install
-install: ## Install the binary into ~/.cargo/bin
+install: ## Install both binaries into ~/.cargo/bin
 	$(CARGO) install --path . --locked
 
 .PHONY: clean
 clean: ## Remove build artefacts
 	$(CARGO) clean
+
+# ---------------------------------------------------------------- desktop
+
+BINDIR    ?= $(HOME)/.cargo/bin
+DATADIR   ?= $(HOME)/.local/share
+APPDIR    := $(DATADIR)/applications
+ICONDIR   := $(DATADIR)/icons/hicolor
+
+.PHONY: install-desktop
+install-desktop: ## Install the icon and menu entry for the GUI
+	@test -x "$(BINDIR)/mistrip-gui" \
+		|| { echo "$(BINDIR)/mistrip-gui not found — run 'make install' first"; exit 1; }
+	install -Dm644 assets/mistrip.svg     "$(ICONDIR)/scalable/apps/mistrip.svg"
+	install -Dm644 assets/icon-64.png     "$(ICONDIR)/64x64/apps/mistrip.png"
+	install -Dm644 assets/icon-128.png    "$(ICONDIR)/128x128/apps/mistrip.png"
+	install -Dm644 assets/icon-256.png    "$(ICONDIR)/256x256/apps/mistrip.png"
+	@mkdir -p "$(APPDIR)"
+	sed 's|@BINDIR@|$(BINDIR)|' assets/mistrip.desktop.in > "$(APPDIR)/mistrip.desktop"
+	@chmod 644 "$(APPDIR)/mistrip.desktop"
+	-update-desktop-database "$(APPDIR)" 2>/dev/null
+	-gtk-update-icon-cache -f -t "$(ICONDIR)" 2>/dev/null
+	@echo "installed: $(APPDIR)/mistrip.desktop -> $(BINDIR)/mistrip-gui"
+
+.PHONY: uninstall-desktop
+uninstall-desktop: ## Remove the icon and menu entry
+	rm -f "$(APPDIR)/mistrip.desktop"
+	rm -f "$(ICONDIR)/scalable/apps/mistrip.svg"
+	rm -f "$(ICONDIR)/64x64/apps/mistrip.png"
+	rm -f "$(ICONDIR)/128x128/apps/mistrip.png"
+	rm -f "$(ICONDIR)/256x256/apps/mistrip.png"
+	-update-desktop-database "$(APPDIR)" 2>/dev/null
+	-gtk-update-icon-cache -f -t "$(ICONDIR)" 2>/dev/null
+	@echo "removed the desktop entry and icons"
+
+.PHONY: gui
+gui: build ## Run the GUI from the build tree
+	./target/debug/mistrip-gui
 
 # ---------------------------------------------------------------- quality
 
